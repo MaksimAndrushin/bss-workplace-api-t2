@@ -1,6 +1,7 @@
 package producer
 
 import (
+	"context"
 	"fmt"
 	"github.com/ozonmp/omp-demo-api/internal/app/repo"
 	"log"
@@ -28,12 +29,13 @@ type producer struct {
 	workerPool *workerpool.WorkerPool
 
 	wg   *sync.WaitGroup
-	done chan bool
+	ctxWithCancel context.Context
 
 	repo repo.EventRepo
 }
 
 func NewKafkaProducer(
+	ctx context.Context,
 	n uint64,
 	sender sender.EventSender,
 	events <-chan model.WorkplaceEvent,
@@ -42,7 +44,6 @@ func NewKafkaProducer(
 ) Producer {
 
 	var wg = &sync.WaitGroup{}
-	var done = make(chan bool)
 
 	return &producer{
 		n:          n,
@@ -51,7 +52,7 @@ func NewKafkaProducer(
 		events:     events,
 		workerPool: workerPool,
 		wg:         wg,
-		done:       done,
+		ctxWithCancel: ctx,
 	}
 }
 
@@ -64,7 +65,7 @@ func (p *producer) Start() {
 				select {
 				case event := <-p.events:
 					processEvent(p, event)
-				case <-p.done:
+				case <-p.ctxWithCancel.Done():
 					return
 				}
 			}
@@ -91,6 +92,5 @@ func processEvent(p *producer, event model.WorkplaceEvent) {
 }
 
 func (p *producer) Close() {
-	close(p.done)
 	p.wg.Wait()
 }

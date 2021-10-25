@@ -1,6 +1,7 @@
 package retranslator
 
 import (
+	"context"
 	"errors"
 	"github.com/ozonmp/omp-demo-api/internal/model"
 	"testing"
@@ -96,6 +97,10 @@ func TestWithoutErrors(t *testing.T) {
 }
 
 func startRetranslator(repo *mocks.MockEventRepo, sender *mocks.MockEventSender) {
+
+	var ctx = context.Background()
+	ctx, cancelFunc := context.WithCancel(ctx)
+
 	var cfg = Config{
 		ChannelSize:    512,
 		ConsumerCount:  2,
@@ -105,6 +110,8 @@ func startRetranslator(repo *mocks.MockEventRepo, sender *mocks.MockEventSender)
 		WorkerCount:    2,
 		Repo:           repo,
 		Sender:         sender,
+		Ctx: 			ctx,
+		CancelFunc: 	cancelFunc,
 	}
 
 	var retranslator = NewRetranslator(cfg)

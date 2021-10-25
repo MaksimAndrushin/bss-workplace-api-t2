@@ -1,6 +1,7 @@
 package consumer
 
 import (
+	"context"
 	"sync"
 	"time"
 
@@ -22,7 +23,7 @@ type consumer struct {
 	batchSize uint64
 	timeout   time.Duration
 
-	done chan bool
+	ctxWithCancel context.Context
 	wg   *sync.WaitGroup
 }
 
@@ -35,6 +36,7 @@ type Config struct {
 }
 
 func NewDbConsumer(
+	ctx context.Context,
 	n uint64,
 	batchSize uint64,
 	consumeTimeout time.Duration,
@@ -42,7 +44,6 @@ func NewDbConsumer(
 	events chan<- model.WorkplaceEvent) Consumer {
 
 	var wg = &sync.WaitGroup{}
-	var done = make(chan bool)
 
 	return &consumer{
 		n:         n,
@@ -51,7 +52,7 @@ func NewDbConsumer(
 		repo:      repo,
 		events:    events,
 		wg:        wg,
-		done:      done,
+		ctxWithCancel: ctx,
 	}
 }
 
@@ -72,7 +73,7 @@ func (c *consumer) Start() {
 					for _, event := range events {
 						c.events <- event
 					}
-				case <-c.done:
+				case <-c.ctxWithCancel.Done():
 					return
 				}
 			}
@@ -81,6 +82,5 @@ func (c *consumer) Start() {
 }
 
 func (c *consumer) Close() {
-	close(c.done)
 	c.wg.Wait()
 }

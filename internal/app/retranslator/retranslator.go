@@ -1,6 +1,7 @@
 package retranslator
 
 import (
+	"context"
 	"time"
 
 	"github.com/ozonmp/omp-demo-api/internal/app/consumer"
@@ -29,6 +30,9 @@ type Config struct {
 
 	Repo   repo.EventRepo
 	Sender sender.EventSender
+
+	Ctx context.Context
+	CancelFunc context.CancelFunc
 }
 
 type retranslator struct {
@@ -36,6 +40,7 @@ type retranslator struct {
 	consumer   consumer.Consumer
 	producer   producer.Producer
 	workerPool *workerpool.WorkerPool
+	cancelFunc context.CancelFunc
 }
 
 func NewRetranslator(cfg Config) Retranslator {
@@ -43,12 +48,14 @@ func NewRetranslator(cfg Config) Retranslator {
 	var workerPool = workerpool.New(cfg.WorkerCount)
 
 	var consumer = consumer.NewDbConsumer(
+		cfg.Ctx,
 		cfg.ConsumerCount,
 		cfg.ConsumeSize,
 		cfg.ConsumeTimeout,
 		cfg.Repo,
 		events)
 	var producer = producer.NewKafkaProducer(
+		cfg.Ctx,
 		cfg.ProducerCount,
 		cfg.Sender,
 		events,
@@ -60,6 +67,7 @@ func NewRetranslator(cfg Config) Retranslator {
 		consumer:   consumer,
 		producer:   producer,
 		workerPool: workerPool,
+		cancelFunc: cfg.CancelFunc,
 	}
 }
 
@@ -69,7 +77,10 @@ func (r *retranslator) Start() {
 }
 
 func (r *retranslator) Close() {
+	r.cancelFunc()
+
 	r.consumer.Close()
 	r.producer.Close()
+
 	r.workerPool.StopWait()
 }
