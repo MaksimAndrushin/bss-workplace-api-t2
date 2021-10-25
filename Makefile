@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 GO_VERSION_SHORT:=$(shell echo `go version` | sed -E 's/.* go(.*) .*/\1/g')
 ifneq ("1.16","$(shell printf "$(GO_VERSION_SHORT)\n1.16" | sort -V | head -1)")
 $(error NEED GO VERSION >= 1.16. Found: $(GO_VERSION_SHORT))
@@ -94,3 +95,12 @@ build-go: generate-go .build
 			-X 'github.com/$(SERVICE_PATH)/internal/config.commitHash=$(COMMIT_HASH)' \
 		" \
 		-o ./bin/grpc-server$(shell go env GOEXE) ./cmd/grpc-server/main.go
+=======
+.PHONY: build
+build:
+	go build cmd/omp-demo-api/main.go
+
+.PHONY: test
+test:
+	go test -v ./...
+>>>>>>> Initial commit
