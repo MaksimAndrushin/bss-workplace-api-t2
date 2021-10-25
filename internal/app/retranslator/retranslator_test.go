@@ -15,7 +15,23 @@ var eventsData = []model.WorkplaceEvent{
 	{ID: 2, Type: 0, Status: 1, Entity: &model.Workplace{ID: 2}},
 	{ID: 3, Type: 0, Status: 1, Entity: &model.Workplace{ID: 3}},
 	{ID: 4, Type: 0, Status: 1, Entity: &model.Workplace{ID: 1}},
-	{ID: 5, Type: 0, Status: 1, Entity: &model.Workplace{ID: 2}}}
+	{ID: 5, Type: 0, Status: 1, Entity: &model.Workplace{ID: 2}},
+	{ID: 6, Type: 0, Status: 1, Entity: &model.Workplace{ID: 2}},
+	{ID: 7, Type: 0, Status: 1, Entity: &model.Workplace{ID: 2}},
+	{ID: 8, Type: 0, Status: 1, Entity: &model.Workplace{ID: 2}},
+	{ID: 9, Type: 0, Status: 1, Entity: &model.Workplace{ID: 2}},
+	{ID: 10, Type: 0, Status: 1, Entity: &model.Workplace{ID: 2}},
+	{ID: 11, Type: 0, Status: 1, Entity: &model.Workplace{ID: 2}},
+	{ID: 12, Type: 0, Status: 1, Entity: &model.Workplace{ID: 2}},
+	{ID: 13, Type: 0, Status: 1, Entity: &model.Workplace{ID: 2}},
+	{ID: 14, Type: 0, Status: 1, Entity: &model.Workplace{ID: 2}},
+	{ID: 15, Type: 0, Status: 1, Entity: &model.Workplace{ID: 2}},
+	{ID: 16, Type: 0, Status: 1, Entity: &model.Workplace{ID: 2}},
+	{ID: 17, Type: 0, Status: 1, Entity: &model.Workplace{ID: 2}},
+	{ID: 18, Type: 0, Status: 1, Entity: &model.Workplace{ID: 2}},
+	{ID: 19, Type: 0, Status: 1, Entity: &model.Workplace{ID: 2}},
+	{ID: 20, Type: 0, Status: 1, Entity: &model.Workplace{ID: 2}},
+}
 
 func TestKafkaAndDBUpdErrors(t *testing.T) {
 	t.Parallel()
@@ -55,8 +71,7 @@ func TestKafkaErrors(t *testing.T) {
 	repo.EXPECT().Unlock(gomock.Any()).Return(nil).AnyTimes()
 
 	sender.EXPECT().Send(gomock.Any()).Return(nil).AnyTimes().After(
-		sender.EXPECT().Send(gomock.Any()).Return(errors.New("Sending to kafka error")).Times(5).After(
-			sender.EXPECT().Send(gomock.Any()).Return(nil).Times(3)))
+		sender.EXPECT().Send(gomock.Any()).Return(errors.New("Sending to kafka error")).Times(5))
 
 	startRetranslator(repo, sender)
 }
