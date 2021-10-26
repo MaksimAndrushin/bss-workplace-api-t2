@@ -13,9 +13,20 @@ import (
 var eventsData = []model.WorkplaceEvent{
 	{ID: 1, Type: 0, Status: 1, Entity: &model.Workplace{ID: 1}},
 	{ID: 2, Type: 0, Status: 1, Entity: &model.Workplace{ID: 2}},
-	{ID: 3, Type: 0, Status: 1, Entity: &model.Workplace{ID: 3}},
+	{ID: 3, Type: 0, Status: 1, Entity: &model.Workplace{ID: 1}},
 	{ID: 4, Type: 0, Status: 1, Entity: &model.Workplace{ID: 1}},
-	{ID: 5, Type: 0, Status: 1, Entity: &model.Workplace{ID: 2}}}
+	{ID: 5, Type: 0, Status: 1, Entity: &model.Workplace{ID: 1}},
+	{ID: 6, Type: 0, Status: 1, Entity: &model.Workplace{ID: 1}},
+	{ID: 7, Type: 0, Status: 1, Entity: &model.Workplace{ID: 1}},
+	{ID: 8, Type: 0, Status: 1, Entity: &model.Workplace{ID: 2}},
+	{ID: 9, Type: 0, Status: 1, Entity: &model.Workplace{ID: 2}},
+	{ID: 10, Type: 0, Status: 1, Entity: &model.Workplace{ID: 2}},
+	{ID: 11, Type: 0, Status: 1, Entity: &model.Workplace{ID: 3}},
+	{ID: 12, Type: 0, Status: 1, Entity: &model.Workplace{ID: 3}},
+	{ID: 13, Type: 0, Status: 1, Entity: &model.Workplace{ID: 1}},
+	{ID: 14, Type: 0, Status: 1, Entity: &model.Workplace{ID: 1}},
+	{ID: 15, Type: 0, Status: 1, Entity: &model.Workplace{ID: 2}},
+}
 
 func TestKafkaAndDBUpdErrors(t *testing.T) {
 	t.Parallel()
@@ -95,12 +106,30 @@ func TestWithoutErrors(t *testing.T) {
 	startRetranslator(repo, sender)
 }
 
+func TestOrderSendToKafka(t *testing.T) {
+	t.Parallel()
+
+	var ctrl = gomock.NewController(t)
+	defer ctrl.Finish()
+
+	var repo = mocks.NewMockEventRepo(ctrl)
+	var sender = mocks.NewMockEventSender(ctrl)
+
+	repo.EXPECT().Lock(gomock.Any()).Return(eventsData, nil).Times(2)
+	repo.EXPECT().Remove(gomock.Any()).Return(nil).AnyTimes()
+	repo.EXPECT().Unlock(gomock.Any()).Return(nil).AnyTimes()
+	sender.EXPECT().Send(gomock.Any()).Return(nil).AnyTimes()
+
+	startRetranslator(repo, sender)
+}
+
+
 func startRetranslator(repo *mocks.MockEventRepo, sender *mocks.MockEventSender) {
 	var cfg = Config{
 		ChannelSize:    512,
 		ConsumerCount:  2,
 		ConsumeSize:    10,
-		ConsumeTimeout: 1 * time.Second,
+		ConsumeTimeout: 3 * time.Second,
 		ProducerCount:  2,
 		WorkerCount:    2,
 		Repo:           repo,

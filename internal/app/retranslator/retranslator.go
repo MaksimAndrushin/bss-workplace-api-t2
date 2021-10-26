@@ -1,6 +1,7 @@
 package retranslator
 
 import (
+	workplaceOrder "github.com/ozonmp/omp-demo-api/internal/app/order"
 	"time"
 
 	"github.com/ozonmp/omp-demo-api/internal/app/consumer"
@@ -35,31 +36,35 @@ type retranslator struct {
 	events     chan model.WorkplaceEvent
 	consumer   consumer.Consumer
 	producer   producer.Producer
-	workerPool *workerpool.WorkerPool
+	workerPool   *workerpool.WorkerPool
 }
 
 func NewRetranslator(cfg Config) Retranslator {
-	var events = make(chan model.WorkplaceEvent, cfg.ChannelSize)
+	events := make(chan model.WorkplaceEvent, cfg.ChannelSize)
+
 	var workerPool = workerpool.New(cfg.WorkerCount)
+	var eventOrderer = workplaceOrder.NewOrderer()
 
 	var consumer = consumer.NewDbConsumer(
 		cfg.ConsumerCount,
 		cfg.ConsumeSize,
 		cfg.ConsumeTimeout,
 		cfg.Repo,
-		events)
+		events,
+		eventOrderer)
 	var producer = producer.NewKafkaProducer(
 		cfg.ProducerCount,
 		cfg.Sender,
 		events,
 		workerPool,
-		cfg.Repo)
+		cfg.Repo,
+		eventOrderer)
 
 	return &retranslator{
-		events:     events,
-		consumer:   consumer,
-		producer:   producer,
-		workerPool: workerPool,
+		events:       events,
+		consumer:     consumer,
+		producer:     producer,
+		workerPool:   workerPool,
 	}
 }
 
