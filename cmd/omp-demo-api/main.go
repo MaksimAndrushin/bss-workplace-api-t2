@@ -10,7 +10,7 @@ import (
 
 func main() {
 
-	var sigs = make(chan os.Signal, 1)
+	sigs := make(chan os.Signal, 1)
 
 	var cfg = retranslator.Config{
 		ChannelSize:   512,
