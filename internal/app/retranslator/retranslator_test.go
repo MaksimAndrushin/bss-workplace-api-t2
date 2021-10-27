@@ -43,6 +43,7 @@ func TestKafkaAndDBUpdErrors(t *testing.T) {
 	var sender = mocks.NewMockEventSender(ctrl)
 
 	repo.EXPECT().Lock(gomock.Any()).Return(eventsData, nil).AnyTimes()
+	repo.EXPECT().UnlockAll().Return(nil).AnyTimes()
 
 	repo.EXPECT().Remove(gomock.Any()).Return(errors.New("Remove execution error")).AnyTimes().After(
 		repo.EXPECT().Remove(gomock.Any()).Return(nil).Times(2))
@@ -67,6 +68,7 @@ func TestKafkaErrors(t *testing.T) {
 	var sender = mocks.NewMockEventSender(ctrl)
 
 	repo.EXPECT().Lock(gomock.Any()).Return(eventsData, nil).AnyTimes()
+	repo.EXPECT().UnlockAll().Return(nil).AnyTimes()
 	repo.EXPECT().Remove(gomock.Any()).Return(nil).AnyTimes()
 	repo.EXPECT().Unlock(gomock.Any()).Return(nil).AnyTimes()
 
@@ -86,6 +88,7 @@ func TestLockErrors(t *testing.T) {
 	var sender = mocks.NewMockEventSender(ctrl)
 
 	repo.EXPECT().Lock(gomock.Any()).Return(nil, errors.New("DB is down")).AnyTimes()
+	repo.EXPECT().UnlockAll().Return(nil).AnyTimes()
 	repo.EXPECT().Remove(gomock.Any()).Return(nil).AnyTimes()
 	repo.EXPECT().Unlock(gomock.Any()).Return(nil).AnyTimes()
 	sender.EXPECT().Send(gomock.Any()).Return(nil).AnyTimes()
@@ -103,6 +106,7 @@ func TestWithoutErrors(t *testing.T) {
 	var sender = mocks.NewMockEventSender(ctrl)
 
 	repo.EXPECT().Lock(gomock.Any()).Return(eventsData, nil).AnyTimes()
+	repo.EXPECT().UnlockAll().Return(nil).AnyTimes()
 	repo.EXPECT().Remove(gomock.Any()).Return(nil).AnyTimes()
 	repo.EXPECT().Unlock(gomock.Any()).Return(nil).AnyTimes()
 	sender.EXPECT().Send(gomock.Any()).Return(nil).AnyTimes()
@@ -120,6 +124,7 @@ func startRetranslator(repo *mocks.MockEventRepo, sender *mocks.MockEventSender)
 		WorkerCount:    2,
 		Repo:           repo,
 		Sender:         sender,
+		BatchSize:      10,
 	}
 
 	var retranslator = NewRetranslator(cfg)

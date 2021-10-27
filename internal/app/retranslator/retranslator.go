@@ -27,8 +27,9 @@ type Config struct {
 	ProducerCount uint64
 	WorkerCount   int
 
-	Repo   repo.EventRepo
-	Sender sender.EventSender
+	Repo      repo.EventRepo
+	Sender    sender.EventSender
+	BatchSize int
 }
 
 type retranslator struct {
@@ -42,6 +43,10 @@ func NewRetranslator(cfg Config) Retranslator {
 	var events = make(chan model.WorkplaceEvent, cfg.ChannelSize)
 	var workerPool = workerpool.New(cfg.WorkerCount)
 
+	// Для реализации гарантии at-least-once при запуске ретранслятора снимаются все локи,
+	// висящие дольше определенного времени. Реализация должна быть сделана в методе UnlockAll
+	cfg.Repo.UnlockAll()
+
 	var consumer = consumer.NewDbConsumer(
 		cfg.ConsumerCount,
 		cfg.ConsumeSize,
@@ -53,7 +58,8 @@ func NewRetranslator(cfg Config) Retranslator {
 		cfg.Sender,
 		events,
 		workerPool,
-		cfg.Repo)
+		cfg.Repo,
+		cfg.BatchSize)
 
 	return &retranslator{
 		events:     events,

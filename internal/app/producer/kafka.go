@@ -34,6 +34,8 @@ type producer struct {
 
 	dbBatchSize     int
 	forceSyncPeriod time.Duration
+
+	repeater Repeater
 }
 
 func NewKafkaProducer(
@@ -42,6 +44,7 @@ func NewKafkaProducer(
 	events <-chan model.WorkplaceEvent,
 	workerPool *workerpool.WorkerPool,
 	repo repo.EventRepo,
+	dbBatchSize int,
 ) Producer {
 
 	var wg = &sync.WaitGroup{}
@@ -55,12 +58,16 @@ func NewKafkaProducer(
 		workerPool:      workerPool,
 		wg:              wg,
 		done:            done,
-		dbBatchSize:     10,
-		forceSyncPeriod: 5,
+		dbBatchSize:     dbBatchSize,
+		forceSyncPeriod: 5 * time.Second,
+		repeater:        NewRepeater(15 * time.Second, repo, n * uint64(dbBatchSize)),
 	}
 }
 
 func (p *producer) Start() {
+
+	p.repeater.Start()
+
 	for i := uint64(0); i < p.n; i++ {
 		p.wg.Add(1)
 		go func() {
@@ -134,6 +141,7 @@ func (p *producer) flushUnlockBatch(unlockBatch *[]uint64) {
 	if len(*unlockBatch) != 0 {
 		if err := p.repo.Unlock(*unlockBatch); err != nil {
 			log.Println(fmt.Sprintf("UNLOCK ERROR!!!! Event ID's - %v is not unlocked in DB", unlockBatch))
+			p.repeater.ToUnlockRepeater(unlockBatch)
 		}
 	}
 }
@@ -142,6 +150,7 @@ func (p *producer) flushRemoveBatch(removeBatch *[]uint64) {
 	if len(*removeBatch) != 0 {
 		if err := p.repo.Remove(*removeBatch); err != nil {
 			log.Println(fmt.Sprintf("REMOVE ERROR!!!! Event ID's - %v is not deleted in DB", removeBatch))
+			p.repeater.ToRemoveRepeater(removeBatch)
 		}
 	}
 }
@@ -149,4 +158,5 @@ func (p *producer) flushRemoveBatch(removeBatch *[]uint64) {
 func (p *producer) Close() {
 	close(p.done)
 	p.wg.Wait()
+	p.repeater.Close()
 }

@@ -10,4 +10,6 @@ type EventRepo interface {
 
 	Add(event []model.WorkplaceEvent) error
 	Remove(eventIDs []uint64) error
+
+	UnlockAll() error
 }

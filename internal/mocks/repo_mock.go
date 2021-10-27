@@ -90,3 +90,17 @@ func (mr *MockEventRepoMockRecorder) Unlock(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Unlock", reflect.TypeOf((*MockEventRepo)(nil).Unlock), arg0)
 }
+
+// UnlockAll mocks base method.
+func (m *MockEventRepo) UnlockAll() error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UnlockAll")
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UnlockAll indicates an expected call of UnlockAll.
+func (mr *MockEventRepoMockRecorder) UnlockAll() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UnlockAll", reflect.TypeOf((*MockEventRepo)(nil).UnlockAll))
+}
