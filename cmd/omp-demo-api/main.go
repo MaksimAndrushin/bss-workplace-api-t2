@@ -11,29 +11,27 @@ import (
 
 func main() {
 
-	var ctx = context.Background()
-	ctx, cancelFunc := context.WithCancel(ctx)
+	ctx, cancelFunc := context.WithCancel(context.Background())
+	sigs := make(chan os.Signal, 1)
 
-	var sigs = make(chan os.Signal, 1)
-
-	var cfg = retranslator.Config{
+	cfg := retranslator.Config{
 		ChannelSize:   512,
 		ConsumerCount: 2,
 		ConsumeSize:   10,
 		ProducerCount: 28,
 		WorkerCount:   2,
 		ConsumeTimeout: 5,
-		Ctx: ctx,
-		CancelFunc: cancelFunc,
 	}
 
-	var retranslator = retranslator.NewRetranslator(cfg)
+	retranslator := retranslator.NewRetranslator(cfg)
 
-	retranslator.Start()
+	retranslator.Start(ctx)
 	defer retranslator.Close()
 
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
 	<-sigs
+
+	cancelFunc()
 
 }

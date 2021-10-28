@@ -10,7 +10,7 @@ import (
 )
 
 type Consumer interface {
-	Start()
+	Start(ctx context.Context)
 	Close()
 }
 
@@ -23,8 +23,7 @@ type consumer struct {
 	batchSize uint64
 	timeout   time.Duration
 
-	ctxWithCancel context.Context
-	wg   *sync.WaitGroup
+	wg *sync.WaitGroup
 }
 
 type Config struct {
@@ -36,7 +35,6 @@ type Config struct {
 }
 
 func NewDbConsumer(
-	ctx context.Context,
 	n uint64,
 	batchSize uint64,
 	consumeTimeout time.Duration,
@@ -52,11 +50,10 @@ func NewDbConsumer(
 		repo:      repo,
 		events:    events,
 		wg:        wg,
-		ctxWithCancel: ctx,
 	}
 }
 
-func (c *consumer) Start() {
+func (c *consumer) Start(ctx context.Context) {
 	for i := uint64(0); i < c.n; i++ {
 		c.wg.Add(1)
 
@@ -73,7 +70,7 @@ func (c *consumer) Start() {
 					for _, event := range events {
 						c.events <- event
 					}
-				case <-c.ctxWithCancel.Done():
+				case <-ctx.Done():
 					return
 				}
 			}
