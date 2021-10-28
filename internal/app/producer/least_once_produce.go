@@ -28,7 +28,7 @@ type repeater struct {
 	rrMutex      sync.Mutex
 
 	wg   *sync.WaitGroup
-	done chan bool
+	done chan interface{}
 }
 
 func NewRepeater(
@@ -38,7 +38,7 @@ func NewRepeater(
 ) Repeater {
 
 	var wg = &sync.WaitGroup{}
-	done := make(chan bool)
+	done := make(chan interface{})
 
 	return &repeater{
 		repeatPeriod: repeatPeriod,
@@ -52,7 +52,6 @@ func NewRepeater(
 }
 
 func (r *repeater) Start() {
-
 	r.wg.Add(1)
 	go func() {
 		defer r.wg.Done()

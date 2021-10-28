@@ -40,20 +40,21 @@ type retranslator struct {
 }
 
 func NewRetranslator(cfg Config) Retranslator {
-	var events = make(chan model.WorkplaceEvent, cfg.ChannelSize)
-	var workerPool = workerpool.New(cfg.WorkerCount)
+	events := make(chan model.WorkplaceEvent, cfg.ChannelSize)
+	workerPool := workerpool.New(cfg.WorkerCount)
 
 	// Для реализации гарантии at-least-once при запуске ретранслятора снимаются все локи,
 	// висящие дольше определенного времени. Реализация должна быть сделана в методе UnlockAll
 	cfg.Repo.UnlockAll()
 
-	var consumer = consumer.NewDbConsumer(
+	consumer := consumer.NewDbConsumer(
 		cfg.ConsumerCount,
 		cfg.ConsumeSize,
 		cfg.ConsumeTimeout,
 		cfg.Repo,
 		events)
-	var producer = producer.NewKafkaProducer(
+
+	producer := producer.NewKafkaProducer(
 		cfg.ProducerCount,
 		cfg.Sender,
 		events,
