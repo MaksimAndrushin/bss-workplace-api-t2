@@ -10,9 +10,9 @@ import (
 
 func main() {
 
-	var sigs = make(chan os.Signal, 1)
+	sigs := make(chan os.Signal, 1)
 
-	var cfg = retranslator.Config{
+	cfg := retranslator.Config{
 		ChannelSize:   512,
 		ConsumerCount: 2,
 		ConsumeSize:   10,
@@ -21,7 +21,7 @@ func main() {
 		ConsumeTimeout: 5,
 	}
 
-	var retranslator = retranslator.NewRetranslator(cfg)
+	retranslator := retranslator.NewRetranslator(cfg)
 	retranslator.Start()
 
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)

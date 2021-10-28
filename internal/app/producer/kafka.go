@@ -28,7 +28,7 @@ type producer struct {
 	workerPool *workerpool.WorkerPool
 
 	wg   *sync.WaitGroup
-	done chan bool
+	done chan interface{}
 
 	repo repo.EventRepo
 
@@ -45,7 +45,7 @@ func NewKafkaProducer(
 ) Producer {
 
 	var wg = &sync.WaitGroup{}
-	var done = make(chan bool)
+	done := make(chan interface{})
 
 	return &producer{
 		n:               n,
@@ -64,14 +64,14 @@ func (p *producer) Start() {
 	for i := uint64(0); i < p.n; i++ {
 		p.wg.Add(1)
 		go func() {
-			var unlockBatch = make([]uint64, 0, p.dbBatchSize)
-			var removeBatch = make([]uint64, 0, p.dbBatchSize)
+			unlockBatch := make([]uint64, 0, p.dbBatchSize)
+			removeBatch := make([]uint64, 0, p.dbBatchSize)
 
 			defer p.wg.Done()
 			defer p.flushUnlockBatch(&unlockBatch)
 			defer p.flushRemoveBatch(&removeBatch)
 
-			var syncTicker = time.NewTicker(p.forceSyncPeriod)
+			syncTicker := time.NewTicker(p.forceSyncPeriod)
 			defer syncTicker.Stop()
 
 			for {
