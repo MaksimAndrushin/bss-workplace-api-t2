@@ -1,6 +1,7 @@
 package consumer
 
 import (
+	"errors"
 	workplaceOrder "github.com/ozonmp/omp-demo-api/internal/app/order"
 	"sync"
 	"time"
@@ -23,7 +24,7 @@ type consumer struct {
 	batchSize uint64
 	timeout   time.Duration
 
-	done chan bool
+	done chan interface{}
 	wg   *sync.WaitGroup
 
 	eventOrderer workplaceOrder.EventOrderer
@@ -46,7 +47,7 @@ func NewDbConsumer(
 	eventOrderer workplaceOrder.EventOrderer) Consumer {
 
 	var wg = &sync.WaitGroup{}
-	done := make(chan bool)
+	done := make(chan interface{})
 
 	return &consumer{
 		n:            n,
@@ -81,15 +82,8 @@ func (c *consumer) Start() {
 			for {
 				select {
 				case <-ticker.C:
-					events, err := c.repo.Lock(c.batchSize)
-					if err != nil {
+					if err := c.processTimerTick(); err != nil {
 						continue
-					}
-
-					c.eventOrderer.AddEvents(events)
-
-					for _, event := range events {
-						c.events <- event
 					}
 
 				case <-c.done:
@@ -98,6 +92,21 @@ func (c *consumer) Start() {
 			}
 		}()
 	}
+}
+
+func (c *consumer) processTimerTick() error {
+	events, err := c.repo.Lock(c.batchSize)
+	if err != nil {
+		return errors.New("Lock error")
+	}
+
+	c.eventOrderer.AddEvents(events)
+
+	for _, event := range events {
+		c.events <- event
+	}
+
+	return nil
 }
 
 func (c *consumer) Close() {

@@ -14,65 +14,53 @@ type EventOrderer interface {
 }
 
 type workplaceOrder struct {
-	orderMap map[uint64][]uint64
-	mu       sync.Mutex
+	orderMap sync.Map
 }
 
 func NewOrderer() EventOrderer {
-	return &workplaceOrder{
-		orderMap: make(map[uint64][]uint64),
-	}
+	return &workplaceOrder{}
 }
 
 func (o *workplaceOrder) AddEvents(events []model.WorkplaceEvent) {
-	o.mu.Lock()
-	defer o.mu.Unlock()
-
 	for _, event := range events {
-		if eventsId, ok := o.orderMap[event.Entity.ID]; !ok {
-			o.orderMap[event.Entity.ID] = []uint64{event.ID}
+		if eventsIdIntrf, ok := o.orderMap.Load(event.Entity.ID); !ok {
+			o.orderMap.Store(event.Entity.ID, []uint64{event.ID})
 		} else { //TODO Сортировку сделать после всей обработки, только для измененных слайсов.
+			eventsId := eventsIdIntrf.([]uint64)
 			eventsId = append(eventsId, event.ID)
 			sort.Slice(eventsId, func(i, j int) bool { return eventsId[i] < eventsId[j] })
-
-			o.orderMap[event.Entity.ID] = eventsId
+			o.orderMap.Store(event.Entity.ID, eventsId)
 		}
 	}
 }
 
 func (o *workplaceOrder) AddEvent(event model.WorkplaceEvent) {
-	o.mu.Lock()
-	defer o.mu.Unlock()
-
-	if eventsId, ok := o.orderMap[event.Entity.ID]; !ok {
-		o.orderMap[event.Entity.ID] = []uint64{event.ID}
+	if eventsIdIntrf, ok := o.orderMap.Load(event.Entity.ID); !ok {
+		o.orderMap.Store(event.Entity.ID, []uint64{event.ID})
 	} else {
-
+		eventsId := eventsIdIntrf.([]uint64)
 		eventsId = append(eventsId, event.ID)
 		sort.Slice(eventsId, func(i, j int) bool { return eventsId[i] < eventsId[j] })
 
-		o.orderMap[event.Entity.ID] = eventsId
+		o.orderMap.Store(event.Entity.ID, eventsId)
 	}
 }
 
 func (o *workplaceOrder) DeleteEvent(event model.WorkplaceEvent) {
-	o.mu.Lock()
-	defer o.mu.Unlock()
-
-	if eventsId, ok := o.orderMap[event.Entity.ID]; ok {
+	if eventsIdIntrf, ok := o.orderMap.Load(event.Entity.ID); ok {
+		eventsId := eventsIdIntrf.([]uint64)
 		if ind := sort.Search(len(eventsId), func(i int) bool { return event.ID <= eventsId[i] }); ind != len(eventsId) {
-			o.orderMap[event.Entity.ID] = append(eventsId[:ind], eventsId[ind+1:]...)
+			o.orderMap.Store(event.Entity.ID, append(eventsId[:ind], eventsId[ind+1:]...))
 		}
 	}
 }
 
 func (o *workplaceOrder) IsEventAscOrdered(event model.WorkplaceEvent) bool {
-	o.mu.Lock()
-	defer o.mu.Unlock()
-
-	if eventsId, ok := o.orderMap[event.Entity.ID]; !ok {
+	if eventsIdIntrf, ok := o.orderMap.Load(event.Entity.ID); !ok {
 		return true
 	} else {
+		eventsId := eventsIdIntrf.([]uint64)
+
 		if len(eventsId) < 1 {
 			return true
 		}

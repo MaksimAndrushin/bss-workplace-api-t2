@@ -29,7 +29,7 @@ type producer struct {
 	workerPool *workerpool.WorkerPool
 
 	wg   *sync.WaitGroup
-	done chan bool
+	done chan interface{}
 
 	repo            repo.EventRepo
 	eventOrderer    workplaceOrder.EventOrderer
@@ -46,8 +46,7 @@ func NewKafkaProducer(
 ) Producer {
 
 	var wg = &sync.WaitGroup{}
-	done := make(chan bool)
-
+	done := make(chan interface{})
 	unorderedEvents := make(chan model.WorkplaceEvent, cap(events))
 
 	return &producer{
@@ -72,8 +71,10 @@ func (p *producer) Start() {
 				select {
 				case event := <-p.events:
 					p.processEvent(event)
+
 				case event := <-p.unorderedEvents:
 					p.processEvent(event)
+
 				case <-p.done:
 					return
 				}
@@ -92,16 +93,15 @@ func (p *producer) processEvent(event model.WorkplaceEvent) {
 
 func (p *producer) sendEventToKafka(event model.WorkplaceEvent) {
 	if err := p.sender.Send(&event); err != nil {
-		p.processSendedToKafkaUnsuccess(event)
+		p.procSendToKafkaUnsuccessful(event)
 	} else {
-		p.processSendedToKafkaSuccess(event)
+		p.procSendToKafkaSuccessful(event)
 	}
 
 	p.eventOrderer.DeleteEvent(event)
 }
 
-func (p *producer) processSendedToKafkaSuccess(event model.WorkplaceEvent) {
-	//log.Println(fmt.Sprintf("Event ID - %d, workplaceId - %d sended to kafka", event.ID, event.Entity.ID))
+func (p *producer) procSendToKafkaSuccessful(event model.WorkplaceEvent) {
 	p.workerPool.Submit(func() {
 		if err := p.repo.Remove([]uint64{event.ID}); err != nil {
 			log.Println(fmt.Sprintf("REMOVE ERROR!!!! Event ID - %d is not deleted in DB", event.ID))
@@ -109,7 +109,7 @@ func (p *producer) processSendedToKafkaSuccess(event model.WorkplaceEvent) {
 	})
 }
 
-func (p *producer) processSendedToKafkaUnsuccess(event model.WorkplaceEvent) {
+func (p *producer) procSendToKafkaUnsuccessful(event model.WorkplaceEvent) {
 	log.Println(fmt.Sprintf("ERROR!!!! Event ID - %d not sended to kafka", event.ID))
 
 	p.workerPool.Submit(func() {

@@ -2,32 +2,39 @@ package workplaceOrder
 
 import (
 	"github.com/ozonmp/omp-demo-api/internal/model"
+	"github.com/stretchr/testify/require"
 	"testing"
 )
 
 func TestWorkplaceOrderer(t *testing.T) {
+	workplaceOrderer := NewOrderer()
 
-	var workplaceOrderer = NewOrderer()
+	generateEvents(workplaceOrderer)
 
-	workplaceOrderer.AddEvent(model.WorkplaceEvent{ID: 4, Type: 0, Status: 1, Entity: &model.Workplace{ID: 1}})
-	workplaceOrderer.AddEvent(model.WorkplaceEvent{ID: 2, Type: 0, Status: 1, Entity: &model.Workplace{ID: 2}})
-	workplaceOrderer.AddEvent(model.WorkplaceEvent{ID: 3, Type: 0, Status: 1, Entity: &model.Workplace{ID: 3}})
-	workplaceOrderer.AddEvent(model.WorkplaceEvent{ID: 1, Type: 0, Status: 1, Entity: &model.Workplace{ID: 1}})
-	workplaceOrderer.AddEvent(model.WorkplaceEvent{ID: 6, Type: 0, Status: 1, Entity: &model.Workplace{ID: 2}})
-	workplaceOrderer.AddEvent(model.WorkplaceEvent{ID: 5, Type: 0, Status: 1, Entity: &model.Workplace{ID: 2}})
+	ordererExpeced := false
+	require.Equal(t, ordererExpeced, workplaceOrderer.IsEventAscOrdered(generateEvent(4, 0, 1, 1)),
+		"Error")
 
-	workplaceOrderer.DeleteEvent(model.WorkplaceEvent{ID: 15, Type: 0, Status: 1, Entity: &model.Workplace{ID: 2}})
-
-	var isOrdererValue = workplaceOrderer.IsEventAscOrdered(model.WorkplaceEvent{ID: 4, Type: 0, Status: 1, Entity: &model.Workplace{ID: 1}})
-	var ordererExpeced = false
-	if isOrdererValue != ordererExpeced {
-		t.Fatalf("Error")
-	}
-
-	isOrdererValue = workplaceOrderer.IsEventAscOrdered(model.WorkplaceEvent{ID: 1, Type: 0, Status: 1, Entity: &model.Workplace{ID: 1}})
 	ordererExpeced = true
-	if isOrdererValue != ordererExpeced {
-		t.Fatalf("Error")
-	}
+	require.Equal(t, ordererExpeced, workplaceOrderer.IsEventAscOrdered(generateEvent(1, 0, 1, 1)),
+		"Error")
 }
 
+func generateEvents(workplaceOrderer EventOrderer) {
+	workplaceOrderer.AddEvent(generateEvent(4, 0, 1, 1))
+	workplaceOrderer.AddEvent(generateEvent(2, 0, 1, 2))
+	workplaceOrderer.AddEvent(generateEvent(3, 0, 1, 3))
+	workplaceOrderer.AddEvent(generateEvent(1, 0, 1, 1))
+	workplaceOrderer.AddEvent(generateEvent(6, 0, 1, 2))
+	workplaceOrderer.AddEvent(generateEvent(5, 0, 1, 2))
+}
+
+func generateEvent(eventId uint64, eventType model.EventType, eventStatus model.EventStatus, workplaceId uint64) model.WorkplaceEvent {
+
+	return model.WorkplaceEvent{
+		ID:     eventId,
+		Type:   eventType,
+		Status: eventStatus,
+		Entity: &model.Workplace{ID: workplaceId},
+	}
+}

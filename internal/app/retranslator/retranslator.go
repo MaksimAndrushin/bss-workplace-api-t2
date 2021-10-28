@@ -41,18 +41,18 @@ type retranslator struct {
 
 func NewRetranslator(cfg Config) Retranslator {
 	events := make(chan model.WorkplaceEvent, cfg.ChannelSize)
+	workerPool := workerpool.New(cfg.WorkerCount)
+	eventOrderer := workplaceOrder.NewOrderer()
 
-	var workerPool = workerpool.New(cfg.WorkerCount)
-	var eventOrderer = workplaceOrder.NewOrderer()
-
-	var consumer = consumer.NewDbConsumer(
+	consumer := consumer.NewDbConsumer(
 		cfg.ConsumerCount,
 		cfg.ConsumeSize,
 		cfg.ConsumeTimeout,
 		cfg.Repo,
 		events,
 		eventOrderer)
-	var producer = producer.NewKafkaProducer(
+
+	producer := producer.NewKafkaProducer(
 		cfg.ProducerCount,
 		cfg.Sender,
 		events,
