@@ -93,26 +93,32 @@ func (r *repeater) flushUnlockBatch() {
 	r.urMutex.Lock()
 	defer r.urMutex.Unlock()
 
-	if len(r.unlockRepeat) != 0 {
-		if err := r.repo.Unlock(r.unlockRepeat); err != nil {
-			log.Println("UNLOCK ERROR!!!!")
-		} else {
-			r.unlockRepeat = make([]uint64, 0, r.initCapacity)
-		}
+	if len(r.unlockRepeat) == 0 {
+		return
 	}
+
+	if err := r.repo.Unlock(r.unlockRepeat); err != nil {
+		log.Println("UNLOCK ERROR!!!!")
+		return
+	}
+
+	r.unlockRepeat = make([]uint64, 0, r.initCapacity)
 }
 
 func (r *repeater) flushRemoveBatch() {
 	r.rrMutex.Lock()
 	defer r.rrMutex.Unlock()
 
-	if len(r.removeRepeat) != 0 {
-		if err := r.repo.Remove(r.removeRepeat); err != nil {
-			log.Println("UNLOCK ERROR!!!!")
-		} else {
-			r.removeRepeat = make([]uint64, 0, r.initCapacity)
-		}
+	if len(r.removeRepeat) == 0 {
+		return
 	}
+
+	if err := r.repo.Remove(r.removeRepeat); err != nil {
+		log.Println("UNLOCK ERROR!!!!")
+		return
+	}
+
+	r.removeRepeat = make([]uint64, 0, r.initCapacity)
 }
 
 func (r *repeater) Close() {
