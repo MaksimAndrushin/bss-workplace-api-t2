@@ -14,7 +14,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 
-	pb "github.com/ozonmp/omp-template-api/pkg/omp-template-api"
+	pb "github.com/ozonmp/bss-workplace-api/pkg/bss-workplace-api"
 )
 
 var (
@@ -42,7 +42,7 @@ func createGatewayServer(grpcAddr, gatewayAddr string) *http.Server {
 	}
 
 	mux := runtime.NewServeMux()
-	if err := pb.RegisterOmpTemplateApiServiceHandler(context.Background(), mux, conn); err != nil {
+	if err := pb.RegisterBssWorkplaceApiServiceHandler(context.Background(), mux, conn); err != nil {
 		log.Fatal().Err(err).Msg("Failed registration handler")
 	}
 
@@ -54,7 +54,8 @@ func createGatewayServer(grpcAddr, gatewayAddr string) *http.Server {
 	return gatewayServer
 }
 
-var grpcGatewayTag = opentracing.Tag{Key: string(ext.Component), Value: "grpc-gateway"}
+//var grpcGatewayTag = opentracing.Tag{Key: string(ext.Conent), Value: "grpc-gateway"}
+var grpcGatewayTag = opentracing.Tag{Key: string("ext.Conent"), Value: "grpc-gateway"}
 
 func tracingWrapper(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

@@ -2,13 +2,13 @@ package producer
 
 import (
 	"fmt"
-	"github.com/ozonmp/omp-demo-api/internal/app/repo"
+	"github.com/ozonmp/bss-workplace-api/internal/app/repo"
 	"log"
 	"sync"
 	"time"
 
-	"github.com/ozonmp/omp-demo-api/internal/app/sender"
-	"github.com/ozonmp/omp-demo-api/internal/model"
+	"github.com/ozonmp/bss-workplace-api/internal/app/sender"
+	"github.com/ozonmp/bss-workplace-api/internal/model"
 
 	"github.com/gammazero/workerpool"
 )

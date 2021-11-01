@@ -2,12 +2,12 @@ package retranslator
 
 import (
 	"errors"
-	"github.com/ozonmp/omp-demo-api/internal/model"
+	"github.com/ozonmp/bss-workplace-api/internal/model"
 	"testing"
 	"time"
 
 	"github.com/golang/mock/gomock"
-	"github.com/ozonmp/omp-demo-api/internal/mocks"
+	"github.com/ozonmp/bss-workplace-api/internal/mocks"
 )
 
 var eventsData = []model.WorkplaceEvent{

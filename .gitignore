@@ -1,2 +1,9 @@
 .env
 .idea
+.idea/
+.cache
+.venv
+swagger/
+bin/
+data/
+main

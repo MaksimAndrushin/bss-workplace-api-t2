@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 GO_VERSION_SHORT:=$(shell echo `go version` | sed -E 's/.* go(.*) .*/\1/g')
 ifneq ("1.16","$(shell printf "$(GO_VERSION_SHORT)\n1.16" | sort -V | head -1)")
 $(error NEED GO VERSION >= 1.16. Found: $(GO_VERSION_SHORT))
@@ -6,8 +5,8 @@ endif
 
 export GO111MODULE=on
 
-SERVICE_NAME=omp-template-api
-SERVICE_PATH=ozonmp/omp-template-api
+SERVICE_NAME=bss-workplace-api
+SERVICE_PATH=ozonmp/bss-workplace-api
 
 PGV_VERSION:="v0.6.1"
 BUF_VERSION:="v0.56.0"
@@ -62,7 +61,7 @@ generate-go: .generate-install-buf .generate-go .generate-finalize-go
 	cd pkg/$(SERVICE_NAME) && ls go.mod || (go mod init github.com/$(SERVICE_PATH)/pkg/$(SERVICE_NAME) && go mod tidy)
 
 .generate-finalize-python:
-	find pypkg/omp-template-api -type d -exec touch {}/__init__.py \;
+	find pypkg/bss-workplace-api -type d -exec touch {}/__init__.py \;
 
 # ----------------------------------------------------------------
 
@@ -79,7 +78,7 @@ deps-go:
 	go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger@latest
 
 .deps-python:
-	python -m pip install grpcio-tools grpclib protobuf
+	python3 -m pip install grpcio-tools grpclib protobuf
 
 .PHONY: build
 build: generate .build
@@ -95,12 +94,3 @@ build-go: generate-go .build
 			-X 'github.com/$(SERVICE_PATH)/internal/config.commitHash=$(COMMIT_HASH)' \
 		" \
 		-o ./bin/grpc-server$(shell go env GOEXE) ./cmd/grpc-server/main.go
-=======
-.PHONY: build
-build:
-	go build cmd/omp-demo-api/main.go
-
-.PHONY: test
-test:
-	go test -v ./...
->>>>>>> Initial commit

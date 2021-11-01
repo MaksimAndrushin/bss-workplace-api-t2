@@ -1,4 +1,4 @@
-module github.com/ozonmp/omp-template-api/pkg/omp-template-api
+module github.com/ozonmp/bss-workplace-api/pkg/bss-workplace-api
 
 go 1.17
 

@@ -24,10 +24,10 @@ import (
 	grpc_opentracing "github.com/grpc-ecosystem/go-grpc-middleware/tracing/opentracing"
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 
-	"github.com/ozonmp/omp-template-api/internal/api"
-	"github.com/ozonmp/omp-template-api/internal/config"
-	"github.com/ozonmp/omp-template-api/internal/repo"
-	pb "github.com/ozonmp/omp-template-api/pkg/omp-template-api"
+	"github.com/ozonmp/bss-workplace-api/internal/api"
+	"github.com/ozonmp/bss-workplace-api/internal/config"
+	"github.com/ozonmp/bss-workplace-api/internal/repo"
+	pb "github.com/ozonmp/bss-workplace-api/pkg/bss-workplace-api"
 )
 
 // GrpcServer is gRPC server
@@ -109,7 +109,7 @@ func (s *GrpcServer) Start(cfg *config.Config) error {
 
 	r := repo.NewRepo(s.db, s.batchSize)
 
-	pb.RegisterOmpTemplateApiServiceServer(grpcServer, api.NewTemplateAPI(r))
+	pb.RegisterBssWorkplaceApiServiceServer(grpcServer, api.NewWorkplaceAPI(r))
 	grpc_prometheus.EnableHandlingTimeHistogram()
 	grpc_prometheus.Register(grpcServer)
 

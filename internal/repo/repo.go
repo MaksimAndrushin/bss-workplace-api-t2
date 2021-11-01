@@ -5,12 +5,12 @@ import (
 
 	"github.com/jmoiron/sqlx"
 
-	"github.com/ozonmp/omp-template-api/internal/model"
+	"github.com/ozonmp/bss-workplace-api/internal/model"
 )
 
-// Repo is DAO for Template
+// Repo is DAO for workplace
 type Repo interface {
-	DescribeTemplate(ctx context.Context, templateID uint64) (*model.Template, error)
+	DescribeWorkplace(ctx context.Context, workplaceID uint64) (*model.Workplace, error)
 }
 
 type repo struct {
@@ -23,6 +23,6 @@ func NewRepo(db *sqlx.DB, batchSize uint) Repo {
 	return &repo{db: db, batchSize: batchSize}
 }
 
-func (r *repo) DescribeTemplate(ctx context.Context, templateID uint64) (*model.Template, error) {
+func (r *repo) DescribeWorkplace(ctx context.Context, workplaceID uint64) (*model.Workplace, error) {
 	return nil, nil
 }

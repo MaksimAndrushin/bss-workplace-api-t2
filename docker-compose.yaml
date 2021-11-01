@@ -1,7 +1,7 @@
 version: "3.9"
 
 services:
-  omp-template-api:
+  bss-workplace-api:
     build:
       context: .
       dockerfile: Dockerfile
@@ -10,7 +10,7 @@ services:
       driver: 'gelf'
       options:
         gelf-address: 'udp://localhost:12201'
-        tag: omp-template-api
+        tag: bss-workplace-api
     networks:
       - ompnw
     depends_on:
@@ -53,7 +53,7 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: omp_template_api
+      POSTGRES_DB: bss_workplace_api
       APP_DB_USER: docker
       APP_DB_PASS: docker
     networks:
@@ -99,7 +99,7 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,OUTSIDE:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-    command: sh -c "((sleep 15 && kafka-topics --create --zookeeper zookeeper:32181 --replication-factor 1 --partitions 1 --topic templates)&) && /etc/confluent/docker/run"
+    command: sh -c "((sleep 15 && kafka-topics --create --zookeeper zookeeper:32181 --replication-factor 1 --partitions 1 --topic workplaces)&) && /etc/confluent/docker/run"
     networks:
       - ompnw
 
@@ -125,9 +125,9 @@ services:
     volumes:
       - ./swagger:/swagger
     environment:
-      SWAGGER_JSON: /swagger/ozonmp/omp_template_api/v1/omp_template_api.swagger.json
+      SWAGGER_JSON: /swagger/ozonmp/bss_workplace_api/v1/bss_workplace_api.swagger.json
     depends_on:
-      - omp-template-api
+      - bss-workplace-api
     networks:
       - ompnw
 

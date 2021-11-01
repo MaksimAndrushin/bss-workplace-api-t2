@@ -3,8 +3,8 @@ package producer
 import (
 	"errors"
 	"github.com/gammazero/workerpool"
-	"github.com/ozonmp/omp-demo-api/internal/mocks"
-	"github.com/ozonmp/omp-demo-api/internal/model"
+	"github.com/ozonmp/bss-workplace-api/internal/mocks"
+	"github.com/ozonmp/bss-workplace-api/internal/model"
 	"testing"
 	"time"
 )
