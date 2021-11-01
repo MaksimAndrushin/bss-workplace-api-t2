@@ -3,10 +3,10 @@ package producer
 import (
 	"errors"
 	"github.com/gammazero/workerpool"
+	"github.com/golang/mock/gomock"
 	"github.com/ozonmp/omp-demo-api/internal/mocks"
 	"github.com/ozonmp/omp-demo-api/internal/model"
 	"testing"
-	"time"
 )
 
 type KafkaProducer struct {
@@ -26,12 +26,13 @@ func TestSendToKafkaSuccessful(t *testing.T) {
 
 	event := model.WorkplaceEvent{ID: 1, Type: 0, Status: 1, Entity: &model.Workplace{ID: 1}}
 
-	fixture.Sender.EXPECT().Send(&event).Return(nil).Times(1)
-	fixture.Repo.EXPECT().Remove([]uint64{event.ID}).Times(1)
+	fixture.SetupSuccessfulSendMock(&event, 1)
+	fixture.SetupSuccessfulRemoveMock(1)
 
 	kafkaTestProducer.producer.Start()
 	kafkaTestProducer.events <- event
-	time.Sleep(1 * time.Second)
+
+	fixture.Wg.Wait()
 }
 
 func TestSendToKafkaUnsuccessful(t *testing.T) {
@@ -45,12 +46,13 @@ func TestSendToKafkaUnsuccessful(t *testing.T) {
 
 	event := model.WorkplaceEvent{ID: 1, Type: 0, Status: 1, Entity: &model.Workplace{ID: 1}}
 
-	fixture.Sender.EXPECT().Send(&event).Return(errors.New("Sending error")).Times(1)
-	fixture.Repo.EXPECT().Unlock([]uint64{event.ID}).Times(1)
+	fixture.SetupUnsuccessfulSendMock(&event, 1)
+	fixture.SetupSuccessfulUnlockMock(1)
 
 	kafkaTestProducer.producer.Start()
 	kafkaTestProducer.events <- event
-	time.Sleep(1 * time.Second)
+
+	fixture.Wg.Wait()
 }
 
 func TestSendToKafkaThreeSEventsAndOneUEvent(t *testing.T) {
@@ -62,29 +64,35 @@ func TestSendToKafkaThreeSEventsAndOneUEvent(t *testing.T) {
 	kafkaTestProducer := NewTestKafkaProducer(2, fixture)
 	defer kafkaTestProducer.Close()
 
-	events := []model.WorkplaceEvent{
-		{ID: 1, Type: 0, Status: 1, Entity: &model.Workplace{ID: 1}},
-		{ID: 2, Type: 0, Status: 1, Entity: &model.Workplace{ID: 1}},
-		{ID: 3, Type: 0, Status: 1, Entity: &model.Workplace{ID: 1}},
-		{ID: 4, Type: 0, Status: 1, Entity: &model.Workplace{ID: 1}}}
+	sendingNum := 0
 
-	fixture.Sender.EXPECT().Send(&events[3]).Return(nil).Times(1).After(
-		fixture.Sender.EXPECT().Send(&events[2]).Return(errors.New("Sending error")).Times(1).After(
-			fixture.Sender.EXPECT().Send(&events[1]).Return(nil).Times(1).After(
-				fixture.Sender.EXPECT().Send(&events[0]).Return(nil).Times(1))))
+	fixture.Wg.Add(4)
+	fixture.Sender.EXPECT().
+		Send(gomock.Any()).
+		DoAndReturn(func(_ *model.WorkplaceEvent) error {
+			defer fixture.Wg.Done()
 
-	fixture.Repo.EXPECT().Remove([]uint64{events[0].ID}).Times(1)
-	fixture.Repo.EXPECT().Remove([]uint64{events[1].ID}).Times(1)
-	fixture.Repo.EXPECT().Unlock([]uint64{events[2].ID}).Times(1)
-	fixture.Repo.EXPECT().Remove([]uint64{events[3].ID}).Times(1)
+			fixture.Mu.Lock()
+			defer fixture.Mu.Unlock()
+
+			sendingNum++
+			if sendingNum == 3 {
+				fixture.SetupSuccessfulUnlockMock(1)
+				return errors.New("Sending error")
+			}
+
+			return nil
+		}).Times(4)
+
+	fixture.SetupSuccessfulRemoveMock(3)
 
 	kafkaTestProducer.producer.Start()
 
-	for _, v := range events {
-		kafkaTestProducer.events <- v
-		time.Sleep(1 * time.Second)
+	for i := 0; i < 4; i++ {
+		kafkaTestProducer.events <- model.WorkplaceEvent{ID: uint64(i), Type: 0, Status: 1, Entity: &model.Workplace{ID: 1}}
 	}
 
+	fixture.Wg.Wait()
 }
 
 func NewTestKafkaProducer(kafkaWorkers uint64, fixture mocks.RetranslatorMockFixture) KafkaProducer {
@@ -96,7 +104,8 @@ func NewTestKafkaProducer(kafkaWorkers uint64, fixture mocks.RetranslatorMockFix
 		fixture.Sender,
 		events,
 		workerPool,
-		fixture.Repo)
+		fixture.Repo,
+	)
 
 	return KafkaProducer{
 		events:     events,

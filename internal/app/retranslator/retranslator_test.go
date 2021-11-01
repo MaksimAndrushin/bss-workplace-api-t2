@@ -1,7 +1,6 @@
 package retranslator
 
 import (
-	"errors"
 	"github.com/ozonmp/omp-demo-api/internal/model"
 	"testing"
 	"time"
@@ -23,11 +22,12 @@ func TestWithoutErrors(t *testing.T) {
 	fixture := mocks.Setup(t)
 	defer fixture.TearDown()
 
-	fixture.Repo.EXPECT().Lock(uint64(4)).Return(eventsData, nil).Times(1)
-	fixture.Sender.EXPECT().Send(gomock. Any()).Return(nil).Times(4)
-	fixture.Repo.EXPECT().Remove(gomock.Any()).Return(nil).Times(4)
+	fixture.SetupSuccessfulLockMock(4, &eventsData, 1)
 
-	startRetranslator(fixture)
+	fixture.SetupSuccessfulSendMock(gomock.Any(), 4)
+	fixture.SetupSuccessfulRemoveMock(4)
+
+	startRetranslator(&fixture)
 }
 
 func TestKafkaAndDBUpdErrors(t *testing.T) {
@@ -36,21 +36,12 @@ func TestKafkaAndDBUpdErrors(t *testing.T) {
 	fixture := mocks.Setup(t)
 	defer fixture.TearDown()
 
-	fixture.Repo.EXPECT().Lock(uint64(4)).Return(eventsData, nil).Times(1)
+	fixture.SetupSuccessfulLockMock(4, &eventsData, 1)
 
-	fixture.Sender.EXPECT().Send(gomock.Any()).Return(nil).Times(1)
-	fixture.Repo.EXPECT().Remove(gomock.Any()).Return(errors.New("Remove error")).Times(1)
+	fixture.SetupSuccessfulSendMock(gomock.Any(), 4)
+	fixture.SetupUnsuccessfulRemoveMock(4)
 
-	fixture.Sender.EXPECT().Send(gomock.Any()).Return(errors.New("Send error")).Times(1)
-	fixture.Repo.EXPECT().Unlock(gomock.Any()).Return(errors.New("Unlock error")).Times(1)
-
-	fixture.Sender.EXPECT().Send(gomock.Any()).Return(nil).Times(1)
-	fixture.Repo.EXPECT().Remove(gomock.Any()).Return(nil).Times(1)
-
-	fixture.Sender.EXPECT().Send(gomock.Any()).Return(nil).Times(1)
-	fixture.Repo.EXPECT().Remove(gomock.Any()).Return(nil).Times(1)
-
-	startRetranslator(fixture)
+	startRetranslator(&fixture)
 }
 
 func TestLockErrors(t *testing.T) {
@@ -59,19 +50,18 @@ func TestLockErrors(t *testing.T) {
 	fixture := mocks.Setup(t)
 	defer fixture.TearDown()
 
-	fixture.Repo.EXPECT().Lock(uint64(4)).Return( nil, errors.New("Lock error")).Times(1)
+	fixture.SetupUnsuccessfulLockMock(4, 1)
 
-	startRetranslator(fixture)
+	startRetranslator(&fixture)
 }
 
-
-func startRetranslator(fixture mocks.RetranslatorMockFixture) {
+func startRetranslator(fixture *mocks.RetranslatorMockFixture) {
 	cfg := Config{
 		ChannelSize:    512,
 		ConsumerCount:  1,
 		ConsumeSize:    4,
 		ConsumeTimeout: 3 * time.Second,
-		ProducerCount:  2,
+		ProducerCount:  1,
 		WorkerCount:    2,
 		Repo:           fixture.Repo,
 		Sender:         fixture.Sender,
@@ -80,7 +70,7 @@ func startRetranslator(fixture mocks.RetranslatorMockFixture) {
 	retranslator := NewRetranslator(cfg)
 	retranslator.Start()
 
-	time.Sleep(5 * time.Second)
+	fixture.Wg.Wait()
 
 	retranslator.Close()
 }
