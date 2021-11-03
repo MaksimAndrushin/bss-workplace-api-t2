@@ -1,0 +1,11 @@
+Metadata-Version: 1.2
+Name: grpc-bss-workplace-api
+Version: 1.0.0
+Summary: GRPC python client for bss-workplace-api
+Home-page: https://github.com/ozonmp/bss-workplace-api
+Author: rusdevop
+Author-email: rusdevops@gmail.com
+License: UNKNOWN
+Description: UNKNOWN
+Platform: UNKNOWN
+Requires-Python: >=3.5

@@ -1,5 +1,30 @@
 # Ozon Marketplace Workplace API
 
+## Задания 3. Описание реализации:
+
+Имплементация ручек согласно п.6:
+- Вызовы логируются
+- Возвращаются пустые ответы
+
+###Базовая версия задания:
+Из корня bss-workplace-api запустить docker-compose: 
+
+```zsh
+$ docker-compose -f docker-compose-mini.yaml up
+```
+
+После запуска проверить работу gRPC можно скриптами: scripts/grpc_server_tests (используется grpcurl)
+
+###Задание 9(со звездочкой):
+Из корня bss-workplace-api запустить docker-compose: 
+
+```zsh
+$ docker-compose -f docker-compose-traefik.yaml up
+```
+
+После запуска проверить работу gateway можно скриптами: scripts/gw_server_tests (используется curl)
+Также в этом варианте доступен swagger: Доступ из браузера по URL: http://0.0.0.0:8080/swagger
+
 ---
 
 ## Build project

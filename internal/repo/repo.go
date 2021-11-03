@@ -10,7 +10,10 @@ import (
 
 // Repo is DAO for workplace
 type Repo interface {
+	CreateWorkplace(ctx context.Context, foo string) (uint64, error)
 	DescribeWorkplace(ctx context.Context, workplaceID uint64) (*model.Workplace, error)
+	ListWorkplaces(ctx context.Context) ([]model.Workplace, error)
+	RemoveWorkplace(ctx context.Context, workplaceID uint64) (bool, error)
 }
 
 type repo struct {
@@ -23,6 +26,18 @@ func NewRepo(db *sqlx.DB, batchSize uint) Repo {
 	return &repo{db: db, batchSize: batchSize}
 }
 
+func (r *repo) CreateWorkplace(ctx context.Context, foo string) (uint64, error) {
+	return 0, nil
+}
+
 func (r *repo) DescribeWorkplace(ctx context.Context, workplaceID uint64) (*model.Workplace, error) {
 	return nil, nil
+}
+
+func (r *repo) ListWorkplaces(ctx context.Context) ([]model.Workplace, error) {
+	return nil, nil
+}
+
+func (r *repo) RemoveWorkplace(ctx context.Context, workplaceID uint64) (bool, error) {
+	return false, nil
 }

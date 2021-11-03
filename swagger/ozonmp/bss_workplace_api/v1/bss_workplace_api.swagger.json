@@ -1,0 +1,220 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "ozonmp/bss_workplace_api/v1/bss_workplace_api.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "BssWorkplaceApiService"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/v1/workplaces": {
+      "get": {
+        "summary": "ListWorkplaceV1 - List a workplace",
+        "operationId": "BssWorkplaceApiService_ListWorkplacesV1",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ListWorkplacesV1Response"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "BssWorkplaceApiService"
+        ]
+      },
+      "post": {
+        "summary": "CreateWorkplaceV1 - Create a workplace",
+        "operationId": "BssWorkplaceApiService_CreateWorkplaceV1",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1CreateWorkplaceV1Response"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "tags": [
+          "BssWorkplaceApiService"
+        ]
+      }
+    },
+    "/v1/workplaces/{workplaceId}": {
+      "get": {
+        "summary": "DescribeWorkplaceV1 - Describe a workplace",
+        "operationId": "BssWorkplaceApiService_DescribeWorkplaceV1",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1DescribeWorkplaceV1Response"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "workplaceId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          }
+        ],
+        "tags": [
+          "BssWorkplaceApiService"
+        ]
+      },
+      "delete": {
+        "summary": "RemoveWorkplaceV1 - Remove a workplace",
+        "operationId": "BssWorkplaceApiService_RemoveWorkplaceV1",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1RemoveWorkplaceV1Response"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "workplaceId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          }
+        ],
+        "tags": [
+          "BssWorkplaceApiService"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "typeUrl": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "v1CreateWorkplaceV1Response": {
+      "type": "object",
+      "properties": {
+        "workplaceId": {
+          "type": "string",
+          "format": "uint64"
+        }
+      }
+    },
+    "v1DescribeWorkplaceV1Response": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "$ref": "#/definitions/v1Workplace"
+        }
+      }
+    },
+    "v1ListWorkplacesV1Response": {
+      "type": "object",
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Workplace"
+          }
+        }
+      }
+    },
+    "v1RemoveWorkplaceV1Response": {
+      "type": "object",
+      "properties": {
+        "found": {
+          "type": "boolean"
+        }
+      }
+    },
+    "v1Workplace": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "foo": {
+          "type": "string"
+        },
+        "created": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    }
+  }
+}

@@ -10,25 +10,29 @@ option go_package = "github.com/ozonmp/bss-workplace-api/pkg/bss-workplace-api;b
 
 // BssWorkplaceApiService - Service for working with workplaces
 service BssWorkplaceApiService {
-  // DescribeWorkplaceV1 - Describe a workplace
+  // CreateWorkplaceV1 - Create a workplace
   rpc CreateWorkplaceV1(CreateWorkplaceV1Request) returns (CreateWorkplaceV1Response) {
     option (google.api.http) = {
       post: "/v1/workplaces"
+      body: "foo"
     };
   }
 
+  // DescribeWorkplaceV1 - Describe a workplace
   rpc DescribeWorkplaceV1(DescribeWorkplaceV1Request) returns (DescribeWorkplaceV1Response) {
     option (google.api.http) = {
       get: "/v1/workplaces/{workplace_id}"
     };
   }
 
-  rpc ListWorkplaceV1(ListWorkplaceV1Request) returns (ListWorkplaceV1Response) {
+  // ListWorkplaceV1 - List a workplace
+  rpc ListWorkplacesV1(ListWorkplacesV1Request) returns (ListWorkplacesV1Response) {
     option (google.api.http) = {
       get: "/v1/workplaces"
     };
   }
 
+  // RemoveWorkplaceV1 - Remove a workplace
   rpc RemoveWorkplaceV1(RemoveWorkplaceV1Request) returns (RemoveWorkplaceV1Response) {
     option (google.api.http) = {
       delete: "/v1/workplaces/{workplace_id}"
@@ -38,7 +42,7 @@ service BssWorkplaceApiService {
 
 message Workplace {
   uint64 id = 1;
-  uint64 foo = 2;
+  string foo = 2;
   google.protobuf.Timestamp created = 3;
 }
 
@@ -58,10 +62,10 @@ message DescribeWorkplaceV1Response {
   Workplace value = 1;
 }
 
-message ListWorkplaceV1Request {
+message ListWorkplacesV1Request {
 }
 
-message ListWorkplaceV1Response {
+message ListWorkplacesV1Response {
   repeated Workplace items = 1;
 }
 

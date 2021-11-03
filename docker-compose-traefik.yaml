@@ -1,0 +1,55 @@
+version: "3.9"
+
+services:
+  traefik:
+    image: traefik:v2.5
+    container_name: "traefik"
+    restart: unless-stopped
+    command:
+      - --log.level=error
+      - --api.insecure=false
+      - --entrypoints.web.address=:80
+      - --providers.docker=true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "8080:80"
+
+  bss-workplace-api:
+    build:
+      context: ..
+      dockerfile: ../Dockerfile
+    restart: unless-stopped
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.bss-workplace-api.entrypoints=web
+      - traefik.http.routers.bss-workplace-api.rule=PathPrefix(`/api/`)
+      - traefik.http.middlewares.bss-workplace-api-stripprefix.stripprefix.prefixes=/api
+      - traefik.http.routers.bss-workplace-api.middlewares=bss-workplace-api-stripprefix@docker
+      - traefik.http.services.bss-workplace-api.loadbalancer.server.port=8080
+    volumes:
+      - ./migrations:/root/migrations
+      - ./config.yml:/root/config.yml
+    depends_on:
+      - traefik
+
+  swagger-ui:
+    image: swaggerapi/swagger-ui
+    restart: always
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.swagger-ui.entrypoints=web
+      - traefik.http.routers.swagger-ui.rule=PathPrefix(`/swagger/`)
+      - traefik.http.middlewares.swagger-ui-stripprefix.stripprefix.prefixes=/swagger
+      - traefik.http.routers.swagger-ui.middlewares=swagger-ui-stripprefix@docker
+      - traefik.http.services.swagger-ui.loadbalancer.server.port=8080
+    volumes:
+      - ./swagger:/swagger
+    environment:
+      SWAGGER_JSON: /swagger/ozonmp/bss_workplace_api/v1/bss_workplace_api.swagger.json
+    depends_on:
+      - bss-workplace-api
+
+networks:
+  ompnw:
+    driver: bridge
