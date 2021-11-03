@@ -1,6 +1,6 @@
 package model
 
-type Subdomain struct {
+type Workplace struct {
 	ID uint64
 }
 
@@ -17,9 +17,9 @@ const (
 	Processed
 )
 
-type SubdomainEvent struct {
+type WorkplaceEvent struct {
 	ID     uint64
 	Type   EventType
 	Status EventStatus
-	Entity *Subdomain
+	Entity *Workplace
 }

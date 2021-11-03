@@ -1,6 +1,9 @@
 package producer
 
 import (
+	"fmt"
+	"github.com/ozonmp/omp-demo-api/internal/app/repo"
+	"log"
 	"sync"
 	"time"
 
@@ -20,28 +23,32 @@ type producer struct {
 	timeout time.Duration
 
 	sender sender.EventSender
-	events <-chan model.SubdomainEvent
+	events <-chan model.WorkplaceEvent
 
 	workerPool *workerpool.WorkerPool
 
 	wg   *sync.WaitGroup
-	done chan bool
+	done chan interface{}
+
+	repo repo.EventRepo
 }
 
-// todo for students: add repo
 func NewKafkaProducer(
 	n uint64,
 	sender sender.EventSender,
-	events <-chan model.SubdomainEvent,
+	events <-chan model.WorkplaceEvent,
 	workerPool *workerpool.WorkerPool,
+	repo repo.EventRepo,
 ) Producer {
 
-	wg := &sync.WaitGroup{}
-	done := make(chan bool)
+	var wg = &sync.WaitGroup{}
+
+	done := make(chan interface{})
 
 	return &producer{
 		n:          n,
 		sender:     sender,
+		repo:       repo,
 		events:     events,
 		workerPool: workerPool,
 		wg:         wg,
@@ -57,21 +64,39 @@ func (p *producer) Start() {
 			for {
 				select {
 				case event := <-p.events:
-					if err := p.sender.Send(&event); err != nil {
-						p.workerPool.Submit(func() {
-							// ...
-						})
-					} else {
-						p.workerPool.Submit(func() {
-							// ...
-						})
-					}
+					p.processEvent(event)
 				case <-p.done:
 					return
 				}
 			}
 		}()
 	}
+}
+
+func (p *producer) processEvent(event model.WorkplaceEvent) {
+	if err := p.sender.Send(&event); err != nil {
+		p.procSendToKafkaUnsuccessful(event)
+	} else {
+		p.procSendToKafkaSuccessful(event)
+	}
+}
+
+func (p *producer) procSendToKafkaSuccessful(event model.WorkplaceEvent) {
+	p.workerPool.Submit(func() {
+		if err := p.repo.Remove([]uint64{event.ID}); err != nil {
+			log.Println(fmt.Sprintf("REMOVE ERROR!!!! Event ID - %d is not deleted in DB", event.ID))
+		}
+	})
+}
+
+func (p *producer) procSendToKafkaUnsuccessful(event model.WorkplaceEvent) {
+	log.Println(fmt.Sprintf("ERROR!!!! Event ID - %d not sended to kafka", event.ID))
+
+	p.workerPool.Submit(func() {
+		if err := p.repo.Unlock([]uint64{event.ID}); err != nil {
+			log.Println(fmt.Sprintf("UNLOCK ERROR!!!! Event ID - %d is not unlocked in DB", event.ID))
+		}
+	})
 }
 
 func (p *producer) Close() {
